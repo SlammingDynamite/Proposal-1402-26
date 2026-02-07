@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Minecraft Trade UI - Valentine Edition</title>
+    <style>
+        @import url('https://fonts.cdnfonts.com/css/minecraft-ia');
+
+        :root {
+            --mc-gui-bg: #c6c6c6;
+            --mc-border-dark: #555555;
+            --mc-border-light: #ffffff;
+            --mc-slot-bg: #8b8b8b;
+            --scale-si: 1;
+        }
+
+        body {
+            background: #1a0a0a;
+            font-family: 'Minecraft', sans-serif;
+            display: flex;
+            flex-direction: column; /* Alineación vertical */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            cursor: url('https://ani.cursors-4u.net/games/gam-16/gam1537.cur'), auto !important;
+        }
+
+        /* --- LOGRO / ADVANCEMENT --- */
+        .advancement-toast {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            background: rgba(33, 33, 33, 0.9);
+            border: 3px solid #a8a8a8;
+            box-shadow: 2px 2px 0px #000;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            transition: right 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            width: 320px;
+        }
+        .advancement-toast.show { right: 20px; }
+        .adv-icon { width: 40px; height: 40px; image-rendering: pixelated; }
+        .adv-text .title { color: #fdf200; font-size: 0.9rem; margin-bottom: 2px; }
+        .adv-text .desc { color: #ffffff; font-size: 0.8rem; }
+
+        /* --- LOGO PRINCIPAL --- */
+        .logo-container {
+            margin-bottom: 30px; /* Espacio entre logo y GUI */
+            z-index: 10;
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .mc-main-logo {
+            width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            filter: drop-shadow(0 12px 0 rgba(0,0,0,0.5));
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* --- ITEM FRAMES (FONDOS) --- */
+        .photo-frame {
+            position: absolute;
+            width: 250px;
+            height: 180px;
+            background: #d1b183;
+            border: 8px solid #5d4037;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .photo-frame img { width: 85%; height: 85%; object-fit: cover; border: 2px solid #000; }
+        .p1 { top: 5%; left: 5%; transform: rotate(-8deg); }
+        .p2 { top: 5%; right: 5%; transform: rotate(12deg); }
+        .p3 { bottom: 5%; left: 5%; transform: rotate(4deg); }
+        .p4 { bottom: 5%; right: 5%; transform: rotate(-10deg); }
+
+        /* --- UI TRADEO --- */
+        .trading-window {
+            background-color: var(--mc-gui-bg);
+            border: 4px solid var(--mc-border-dark);
+            box-shadow: inset 4px 4px var(--mc-border-light), 0 0 40px rgba(0,0,0,0.5);
+            padding: 20px;
+            width: 400px;
+            position: relative;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .villager-header { color: #3f3f3f; margin-bottom: 15px; font-size: 1.1rem; text-shadow: 1px 1px #eee; }
+
+        .trade-slots {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            background: #8b8b8b;
+            border: 4px solid #373737;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: inset 4px 4px #555;
+        }
+
+        .item-img { width: 32px; height: 32px; image-rendering: pixelated; }
+
+        .mc-btn {
+            font-family: 'Minecraft', sans-serif;
+            font-size: 1rem;
+            color: white;
+            padding: 10px 20px;
+            border: 3px solid #000;
+            cursor: pointer;
+            text-shadow: 2px 2px #222;
+            image-rendering: pixelated;
+        }
+
+        #btnSi {
+            background-color: #3fb13f;
+            border-top-color: #72ff72;
+            border-left-color: #72ff72;
+            transform: scale(var(--scale-si));
+            transition: transform 0.1s ease-out;
+        }
+
+        #btnNo {
+            background-color: #b13f3f;
+            border-top-color: #ff7272;
+            border-left-color: #ff7272;
+            position: relative; 
+        }
+
+        .inventory-grid { display: grid; grid-template-columns: repeat(9, 38px); gap: 2px; justify-content: center; }
+        .slot { width: 34px; height: 34px; background: #8b8b8b; border: 2px solid #373737; box-shadow: inset 2px 2px #555, inset -2px -2px #fff; display: flex; align-items: center; justify-content: center;}
+    </style>
+</head>
+<body>
+
+<div class="logo-container" id="logoMain">
+    <img src="assets/img/logoprincipal.png" class="mc-main-logo" alt="Título">
+</div>
+
+<div class="advancement-toast" id="toast">
+    <img src="assets/img/heart.png" class="adv-icon">
+    <div class="adv-text">
+        <div class="title">¡Logro desbloqueado!</div>
+        <div class="desc">¡ES UNA CITA!</div>
+    </div>
+</div>
+
+<div class="photo-frame p1"><img src="assets/img/Como no la voy a querer si pasamos 10 mins jugando con un tronco JAJAJA.png"></div>
+<div class="photo-frame p2"><img src="assets/img/Una aventura mas huyendo de unas gaviotas.png"></div>
+<div class="photo-frame p3"><img src="assets/img/Los mas pescadores.png"></div>
+<div class="photo-frame p4"><img src="assets/img/TBT de pq no debo tener permisos de admin.jpg"></div>
+
+<div class="trading-window" id="gui">
+    <div id="header" class="villager-header">Gabriel: ¿Aceptas el trato?</div>
+    
+    <div class="trade-slots">
+        <div class="slot"><img src="assets/img/esmeralda.png" class="item-img"></div>
+        <span style="font-size: 1.5rem; color: #3f3f3f;"> ----- </span>
+        <button id="btnSi" class="mc-btn">SÍ</button>
+        <button id="btnNo" class="mc-btn">NO</button>
+    </div>
+
+    <div class="inventory-grid" id="invGrid"></div>
+</div>
+
+<script>
+    const btnSi = document.getElementById('btnSi');
+    const btnNo = document.getElementById('btnNo');
+    const invGrid = document.getElementById('invGrid');
+    const toast = document.getElementById('toast');
+    const gui = document.getElementById('gui');
+    const logo = document.getElementById('logoMain');
+    
+    let currentScale = 1;
+    let isMoving = false;
+
+    const villagerSound = new Audio('assets/aud/aldeano.mp3');
+    const levelUpSound = new Audio('assets/aud/logrodesbloqueado.mp3');
+
+    // Llenar inventario
+    for (let i = 0; i < 27; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        if(i === 0) slot.innerHTML = '<img src="assets/img/abeto.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 6) slot.innerHTML = '<img src="assets/img/tulipanb.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 8) slot.innerHTML = '<img src="assets/img/cama.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 11) slot.innerHTML = '<img src="assets/img/cerezo.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 13) slot.innerHTML = '<img src="assets/img/ally.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 9) slot.innerHTML = '<img src="assets/img/tulipann.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 17) slot.innerHTML = '<img src="assets/img/tulipanr.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 23) slot.innerHTML = '<img src="assets/img/tulipanros.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 26) slot.innerHTML = '<img src="assets/img/ajolote.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+        if(i === 2) slot.innerHTML = '<img src="assets/img/bee.png" class="item-img" style="width:20px;height:20px">';
+        invGrid.appendChild(slot);
+    }
+
+    const moveNoButton = () => {
+        if (!isMoving) { btnNo.style.position = 'absolute'; isMoving = true; }
+        const rect = gui.getBoundingClientRect();
+        const maxX = rect.width - btnNo.offsetWidth - 20;
+        const maxY = rect.height - btnNo.offsetHeight - 20;
+        btnNo.style.left = `${Math.random() * maxX}px`;
+        btnNo.style.top = `${Math.random() * maxY}px`;
+    };
+
+    btnNo.addEventListener('mouseover', () => {
+        currentScale += 0.35;
+        document.documentElement.style.setProperty('--scale-si', currentScale);
+        moveNoButton();
+        villagerSound.currentTime = 0;
+        villagerSound.play().catch(()=>{});
+    });
+
+    btnSi.addEventListener('click', () => {
+        levelUpSound.play();
+        toast.classList.add('show');
+
+        // Efecto Final Collage
+        document.querySelectorAll('.photo-frame').forEach((frame, index) => {
+            frame.style.top = "50%";
+            frame.style.left = "50%";
+            frame.style.transform = `translate(-50%, -50%) rotate(${index * 12 - 20}deg) scale(1.5)`;
+            frame.style.zIndex = 100;
+        });
+
+        // Ocultar UI y Logo para el momento especial
+        gui.style.opacity = "0";
+        gui.style.pointerEvents = "none";
+        logo.style.opacity = "0";
+    });
+</script>
+</body>
+</html>
